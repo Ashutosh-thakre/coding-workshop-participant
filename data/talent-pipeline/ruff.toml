@@ -6,3 +6,7 @@ target-version = "py311"
 select = ["E", "F", "W", "B", "UP", "SIM", "N"]
 # F / T aliases for pyspark.sql.functions / types are the standard PySpark convention
 ignore = ["N812"]
+
+[lint.per-file-ignores]
+# Test fixtures are data tables and Spark schema strings: long lines read better than wrapped ones
+"tests/*" = ["E501"]

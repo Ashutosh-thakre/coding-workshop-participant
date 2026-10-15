@@ -1,3 +1,4 @@
+
 """ACME Talent Pipeline: Bronze -> Silver -> Gold batch ETL for employee performance data.
 
 Sources:   PostgreSQL (HR tables) + S3 landing zone (learning activity JSONL events)
@@ -32,7 +33,7 @@ import sys
 import time
 import types
 import uuid
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from datetime import date, datetime, UTC
@@ -114,6 +115,9 @@ class PipelineConfig:
     run_date: date            # logical date of the batch; drives Bronze partitioning
     run_id: str               # unique id of this execution, stamped on every row and log line
     publish_gold_to_postgres: bool = True  # also copy Gold tables to Postgres (gold_* tables)
+    spark_cores: str = "*"                 # local[<cores>]: "*" = all cores available to the container
+    spark_driver_memory: str = "512m"      # JVM heap (see DEFAULT_JAVA_OPTIONS for why it is small)
+    spark_java_options: str = ""           # JVM flags; empty -> DEFAULT_JAVA_OPTIONS
 
     # --- Data lake zone paths (one place defines the layout) --------------------
     @property
@@ -154,7 +158,8 @@ class PipelineConfig:
         either LAKE_ROOT (any path/URI) or LAKE_BUCKET (an S3 bucket name).
         Optional: IS_LOCAL (default true), POSTGRES_PORT (5432), AWS_ENDPOINT_URL,
         AWS_REGION (us-east-1), RUN_DATE (YYYY-MM-DD, default today in UTC),
-        PUBLISH_GOLD_TO_POSTGRES (default true).
+        PUBLISH_GOLD_TO_POSTGRES (default true), SPARK_CORES (default *),
+        SPARK_DRIVER_MEMORY (default 512m), SPARK_JAVA_OPTIONS (default DEFAULT_JAVA_OPTIONS).
         """
         is_local = _parse_bool(os.environ.get("IS_LOCAL", "true"))
 
@@ -191,6 +196,9 @@ class PipelineConfig:
             run_date=run_date,
             run_id=datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:6],
             publish_gold_to_postgres=_parse_bool(os.environ.get("PUBLISH_GOLD_TO_POSTGRES", "true")),
+            spark_cores=os.environ.get("SPARK_CORES", "*").strip() or "*",
+            spark_driver_memory=os.environ.get("SPARK_DRIVER_MEMORY", "512m").strip() or "512m",
+            spark_java_options=os.environ.get("SPARK_JAVA_OPTIONS", "").strip() or DEFAULT_JAVA_OPTIONS,
         )
 
 
@@ -218,6 +226,18 @@ class _ContextFilter(logging.Filter):
         return True
 
 
+class _StdoutHandler(logging.StreamHandler):
+    """Write to whatever sys.stdout is *now* (survives stdout redirection, e.g. under pytest)."""
+
+    @property
+    def stream(self):  # noqa: ANN201
+        return sys.stdout
+
+    @stream.setter
+    def stream(self, _value: object) -> None:
+        pass
+
+
 def setup_logging(run_id: str, level: int = logging.INFO) -> logging.Logger:
     """Configure the pipeline logger to write structured lines to stdout (idempotent)."""
     logger = logging.getLogger(LOGGER_NAME)
@@ -225,7 +245,7 @@ def setup_logging(run_id: str, level: int = logging.INFO) -> logging.Logger:
     logger.propagate = False
     logger.handlers.clear()
 
-    handler = logging.StreamHandler(sys.stdout)
+    handler = _StdoutHandler()
     handler.setFormatter(logging.Formatter(LOG_FORMAT, DATE_FORMAT))
     handler.addFilter(_ContextFilter(run_id))
     logger.addHandler(handler)
@@ -241,7 +261,7 @@ def get_logger(step: str) -> logging.LoggerAdapter:
 
 
 @contextmanager
-def log_step(logger: logging.LoggerAdapter, description: str) -> Iterator[None]:
+def log_step(logger: logging.LoggerAdapter, description: str) -> Generator[None]:
     """Log start, end, duration and status of a block of work (errors are logged, then re-raised)."""
     logger.info("START %s", description)
     started = time.perf_counter()
@@ -277,6 +297,8 @@ def retry(
     logger = get_logger("retry")
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
+        name = getattr(func, "__name__", type(func).__name__)  # callables like partial() have no __name__
+
         @functools.wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             for attempt in range(1, attempts + 1):
@@ -284,12 +306,12 @@ def retry(
                     return func(*args, **kwargs)
                 except exceptions as exc:
                     if attempt == attempts:
-                        logger.error("%s failed after %d attempt(s): %s", func.__name__, attempts, exc)
+                        logger.error("%s failed after %d attempt(s): %s", name, attempts, exc)
                         raise
                     delay = base_delay * 2 ** (attempt - 1)
                     logger.warning(
                         "%s failed (attempt %d/%d): %s - retrying in %.1fs",
-                        func.__name__, attempt, attempts, exc, delay,
+                        name, attempt, attempts, exc, delay,
                     )
                     sleep(delay)
             raise AssertionError("unreachable")  # loop always returns or raises
@@ -303,6 +325,17 @@ def retry(
 # 4. SPARK SESSION - local mode (laptop or Kubernetes pod) with Postgres + S3 connectors
 # =============================================================================
 
+# Lean JVM for a small single-node batch. Measured peak memory of the whole job (Python driver + JVM +
+# Python workers) dropped from 2.3 GB to 1.8 GB, under the Kubernetes job's 2 GiB limit
+# (infra/helm/values.yaml), with identical results and a faster run (see docs/testing.md):
+#   SerialGC          - one GC thread instead of several (no benefit from parallel GC at this size)
+#   TieredStopAtLevel - lightweight JIT compiler only (less code cache, quicker start-up)
+#   caps on code cache, class metadata, thread stacks and off-heap buffers
+DEFAULT_JAVA_OPTIONS = (
+    "-XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:ReservedCodeCacheSize=64m "
+    "-XX:MaxMetaspaceSize=256m -XX:MaxDirectMemorySize=128m -Xss512k"
+)
+
 # Connector versions must match the Spark build: Spark 4.1.2 ships Hadoop 3.4.2.
 POSTGRES_JDBC_PACKAGE = "org.postgresql:postgresql:42.7.7"
 HADOOP_AWS_PACKAGE = "org.apache.hadoop:hadoop-aws:3.4.2"
@@ -312,7 +345,10 @@ def build_spark(config: PipelineConfig, app_name: str = "talent-pipeline") -> Sp
     """Create (or reuse) a SparkSession configured for this pipeline run."""
     builder = (
         SparkSession.builder.appName(app_name)
-        .master("local[*]")
+        .master(f"local[{config.spark_cores}]")
+        # Applied when this process starts the JVM (it does: Spark runs in-process, local mode).
+        .config("spark.driver.memory", config.spark_driver_memory)
+        .config("spark.driver.extraJavaOptions", config.spark_java_options or DEFAULT_JAVA_OPTIONS)
         .config("spark.jars.packages", f"{POSTGRES_JDBC_PACKAGE},{HADOOP_AWS_PACKAGE}")
         # Idempotent writes: overwriting a partitioned table replaces only the partitions written.
         .config("spark.sql.sources.partitionOverwriteMode", "dynamic")
@@ -488,7 +524,7 @@ class RunRecorder:
     _clock_start: float = field(default_factory=time.perf_counter, repr=False)
 
     @contextmanager
-    def step(self, name: str) -> Iterator[None]:
+    def step(self, name: str) -> Generator[None]:
         """Record a step's start, end, duration and status (errors are re-raised)."""
         record = StepRecord(name=name, started_at=_utc_now())
         self.steps.append(record)
@@ -970,21 +1006,29 @@ def validate_rows(
 
 
 def check_partition_dates(df: DataFrame, date_field: str, file_column: str = "_source_file") -> tuple[DataFrame, DataFrame]:
-    """Split rows into (matching, mismatched) by comparing a date field with the file's year=/month=/day=."""
+    """Split rows into (matching, mismatched) by comparing a date field with the file's year=/month=/day=.
+
+    Dates are compared as 'yyyy-MM-dd' text, so a malformed folder name (e.g. month=13)
+    is reported as a mismatch instead of crashing Spark's strict (ANSI) date casting.
+    Files without year=/month=/day= in their path are not checked.
+    """
     pattern = r"year=(\d{4})/month=(\d{1,2})/day=(\d{1,2})"
-    partition_day = F.to_date(F.concat_ws(
-        "-",
-        F.regexp_extract(file_column, pattern, 1),
-        F.lpad(F.regexp_extract(file_column, pattern, 2), 2, "0"),
-        F.lpad(F.regexp_extract(file_column, pattern, 3), 2, "0"),
-    ))
-    record_day = F.to_date(F.col(date_field))
-    matches = partition_day.isNull() | (partition_day == record_day)  # files without partitions are not checked
+    partition_day = F.when(
+        F.col(file_column).rlike(pattern),
+        F.concat_ws(
+            "-",
+            F.regexp_extract(file_column, pattern, 1),
+            F.lpad(F.regexp_extract(file_column, pattern, 2), 2, "0"),
+            F.lpad(F.regexp_extract(file_column, pattern, 3), 2, "0"),
+        ),
+    )
+    record_day = F.date_format(F.col(date_field), "yyyy-MM-dd")
+    matches = partition_day.isNull() | (partition_day == record_day)
     mismatched = df.where(~matches).withColumn(
         DQ_ERRORS,
         F.format_string(
             "%s: %s does not match landing partition %s",
-            F.lit(date_field), record_day.cast("string"), partition_day.cast("string"),
+            F.lit(date_field), record_day, partition_day,
         ),
     )
     return df.where(matches), mismatched
