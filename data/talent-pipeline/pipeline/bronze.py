@@ -18,7 +18,8 @@ from pyspark.sql import functions as F
 from pipeline.config import PipelineConfig
 from pipeline.lineage import DatasetMetric
 from pipeline.logging_utils import get_logger, log_step
-from pipeline.sources import list_files, read_postgres_table, read_text_lines
+from pipeline.sources import read_postgres_table, read_text_lines
+from pipeline.storage import list_files
 
 logger = get_logger("bronze")
 

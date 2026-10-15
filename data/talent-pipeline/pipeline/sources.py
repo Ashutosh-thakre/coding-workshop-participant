@@ -31,27 +31,6 @@ def read_postgres_table(spark: SparkSession, config: PipelineConfig, table: str)
 
 
 @retry(attempts=3, base_delay=2.0)
-def list_files(spark: SparkSession, directory: str, suffix: str = ".jsonl") -> list[tuple[str, int]]:
-    """List every file under a directory as (path, size_in_bytes), including empty files.
-
-    Uses the Hadoop FileSystem API (works for s3a:// and local paths). Spark's
-    DataFrame readers can't be used here: they silently skip zero-byte files.
-    """
-    jvm = spark.sparkContext._jvm
-    path = jvm.org.apache.hadoop.fs.Path(directory)
-    fs = path.getFileSystem(spark.sparkContext._jsc.hadoopConfiguration())
-
-    files = []
-    iterator = fs.listFiles(path, True)  # True = recursive
-    while iterator.hasNext():
-        status = iterator.next()
-        file_path = status.getPath().toString()
-        if file_path.endswith(suffix):
-            files.append((file_path, status.getLen()))
-    return sorted(files)
-
-
-@retry(attempts=3, base_delay=2.0)
 def read_text_lines(spark: SparkSession, directory: str, file_glob: str = "*.jsonl") -> DataFrame:
     """Read every matching file under a directory, line by line, as raw text.
 

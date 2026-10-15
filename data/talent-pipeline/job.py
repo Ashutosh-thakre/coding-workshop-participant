@@ -22,7 +22,7 @@ from pipeline.bronze import run_bronze
 from pipeline.config import ConfigError, PipelineConfig
 from pipeline.gold import run_gold
 from pipeline.healthcheck import run_healthcheck
-from pipeline.lineage import DatasetMetric
+from pipeline.lineage import DatasetMetric, RunRecorder, write_run_lineage
 from pipeline.logging_utils import get_logger, log_step, setup_logging
 from pipeline.silver import run_silver
 from pipeline.spark_session import build_spark
@@ -85,21 +85,27 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     spark = build_spark(config)
-    metrics: list[DatasetMetric] = []
+    recorder = RunRecorder(config)
+    succeeded = False
     try:
         with log_step(logger, f"pipeline {steps}"):
             for step in steps:
-                metrics += STEPS[step](spark, config) or []
+                with recorder.step(step):
+                    recorder.datasets += STEPS[step](spark, config) or []
+        succeeded = True
     except Exception:  # already logged with traceback by log_step
-        log_summary(logger, metrics)
-        logger.error("Pipeline FAILED")
-        return 1
+        pass
     finally:
+        recorder.finish(succeeded)
+        log_summary(logger, recorder.datasets)
+        try:
+            logger.info("Lineage manifest written: %s", write_run_lineage(spark, recorder))
+        except Exception:  # never let lineage failures hide the pipeline's own outcome
+            logger.exception("Could not write lineage for this run")
         spark.stop()
 
-    log_summary(logger, metrics)
-    logger.info("Pipeline SUCCEEDED")
-    return 0
+    logger.info("Pipeline %s", recorder.status)
+    return 0 if succeeded else 1
 
 
 if __name__ == "__main__":
