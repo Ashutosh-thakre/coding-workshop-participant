@@ -1,0 +1,1182 @@
+{
+ "generated_at": "2026-10-15T08:27:24+00:00",
+ "source": "s3://coding-workshop-datalake-d59e2ef7",
+ "github": "https://github.com/Ashutosh-thakre/coding-workshop-participant",
+ "run": {
+  "run_id": "20261015T080710Z-e6bae6",
+  "run_date": "2026-10-15",
+  "status": "SUCCEEDED",
+  "started_at": "2026-10-15T08:08:21+00:00",
+  "finished_at": "2026-10-15T08:11:59+00:00",
+  "duration_seconds": 218.22,
+  "environment": "AWS (EKS + Aurora + S3)",
+  "lake": "s3a://coding-workshop-datalake-d59e2ef7",
+  "steps": [
+   {
+    "name": "check",
+    "status": "SUCCEEDED",
+    "seconds": 62.74
+   },
+   {
+    "name": "bronze",
+    "status": "SUCCEEDED",
+    "seconds": 57.7
+   },
+   {
+    "name": "silver",
+    "status": "SUCCEEDED",
+    "seconds": 66.96
+   },
+   {
+    "name": "gold",
+    "status": "SUCCEEDED",
+    "seconds": 30.82
+   }
+  ],
+  "reconciliation": [
+   {
+    "layer": "bronze",
+    "dataset": "teams",
+    "rows_in": 100,
+    "rows_out": 100,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "bronze",
+    "dataset": "competencies",
+    "rows_in": 40,
+    "rows_out": 40,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "bronze",
+    "dataset": "employees",
+    "rows_in": 2000,
+    "rows_out": 2000,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "bronze",
+    "dataset": "projects",
+    "rows_in": 33,
+    "rows_out": 33,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "bronze",
+    "dataset": "performance_reviews",
+    "rows_in": 4000,
+    "rows_out": 4000,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "bronze",
+    "dataset": "competency_assessments",
+    "rows_in": 4000,
+    "rows_out": 4000,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "bronze",
+    "dataset": "talent_review",
+    "rows_in": 2000,
+    "rows_out": 2000,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "bronze",
+    "dataset": "learning_activity",
+    "rows_in": 29868,
+    "rows_out": 29868,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "silver",
+    "dataset": "teams",
+    "rows_in": 100,
+    "rows_out": 100,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "silver",
+    "dataset": "competencies",
+    "rows_in": 40,
+    "rows_out": 40,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "silver",
+    "dataset": "employees",
+    "rows_in": 2000,
+    "rows_out": 2000,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "silver",
+    "dataset": "projects",
+    "rows_in": 33,
+    "rows_out": 33,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "silver",
+    "dataset": "performance_reviews",
+    "rows_in": 4000,
+    "rows_out": 4000,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "silver",
+    "dataset": "competency_assessments",
+    "rows_in": 4000,
+    "rows_out": 4000,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "silver",
+    "dataset": "talent_review",
+    "rows_in": 2000,
+    "rows_out": 2000,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "silver",
+    "dataset": "learning_activity",
+    "rows_in": 29868,
+    "rows_out": 29574,
+    "rows_rejected": 143,
+    "rows_dropped": 151
+   },
+   {
+    "layer": "gold",
+    "dataset": "employee_performance_history",
+    "rows_in": 4000,
+    "rows_out": 4000,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "gold",
+    "dataset": "skill_gaps",
+    "rows_in": 4000,
+    "rows_out": 4000,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "gold",
+    "dataset": "promotion_pipeline",
+    "rows_in": 2000,
+    "rows_out": 2000,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "gold",
+    "dataset": "employee_learning_summary",
+    "rows_in": 2000,
+    "rows_out": 2000,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "gold",
+    "dataset": "attrition_risk",
+    "rows_in": 2000,
+    "rows_out": 2000,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "gold",
+    "dataset": "team_performance_outcomes",
+    "rows_in": 100,
+    "rows_out": 100,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   },
+   {
+    "layer": "gold",
+    "dataset": "skill_distribution",
+    "rows_in": 1595,
+    "rows_out": 1595,
+    "rows_rejected": 0,
+    "rows_dropped": 0
+   }
+  ],
+  "rules": {
+   "critical_gap_levels": 2,
+   "high_performer_rating": 4,
+   "promotion_min_rating": 4,
+   "low_rating": 2,
+   "learning_inactive_days": 180,
+   "risk_points": {
+    "hr_high": 3,
+    "hr_medium": 1,
+    "rating_declined": 2,
+    "low_rating": 1,
+    "learning_inactive": 1
+   },
+   "risk_tier_high": 4,
+   "risk_tier_medium": 2
+  }
+ },
+ "quality": {
+  "issues": [
+   {
+    "issue": "Empty daily file",
+    "count": 1,
+    "handling": "Warning in Bronze",
+    "detail": "2025-09-03"
+   },
+   {
+    "issue": "Missing employee_id",
+    "count": 76,
+    "handling": "Quarantined with reason",
+    "detail": ""
+   },
+   {
+    "issue": "Unparseable or impossible date",
+    "count": 54,
+    "handling": "Quarantined with reason",
+    "detail": "'', '2026-13-45', 'N/A', 'yesterday'"
+   },
+   {
+    "issue": "Truncated / malformed JSON line",
+    "count": 13,
+    "handling": "Quarantined with reason",
+    "detail": ""
+   },
+   {
+    "issue": "Duplicate events removed",
+    "count": 151,
+    "handling": "One copy kept",
+    "detail": ""
+   },
+   {
+    "issue": "Duplicated and invalid",
+    "count": 1,
+    "handling": "All copies quarantined",
+    "detail": ""
+   },
+   {
+    "issue": "Field renamed by producer (notes → text)",
+    "count": 39,
+    "handling": "Renamed and kept",
+    "detail": ""
+   },
+   {
+    "issue": "Completions without an enrolment event",
+    "count": 3255,
+    "handling": "Kept; completion rate uses courses engaged",
+    "detail": ""
+   }
+  ],
+  "lines_in": 29868,
+  "kept": 29574,
+  "quarantined": 143,
+  "duplicates": 151,
+  "hr_tables": 7,
+  "hr_rejected": 0
+ },
+ "kpis": [
+  {
+   "label": "Employees",
+   "value": "2,000",
+   "note": "100 teams · 10 departments"
+  },
+  {
+   "label": "Average rating",
+   "value": "3.41",
+   "note": "2025-H1 · up from 3.02"
+  },
+  {
+   "label": "Promotion candidates",
+   "value": "166",
+   "note": "132 ready now"
+  },
+  {
+   "label": "High attrition risk",
+   "value": "251",
+   "note": "13% of employees"
+  },
+  {
+   "label": "Critical skill gaps",
+   "value": "325",
+   "note": "317 employees"
+  },
+  {
+   "label": "Inactive learners",
+   "value": "317",
+   "note": "none in 180 days"
+  }
+ ],
+ "questions": {
+  "q1": {
+   "periods": [
+    "2024-H2",
+    "2025-H1"
+   ],
+   "ratings": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "series": [
+    {
+     "name": "2024-H2",
+     "values": [
+      0,
+      650,
+      663,
+      687,
+      0
+     ]
+    },
+    {
+     "name": "2025-H1",
+     "values": [
+      112,
+      354,
+      530,
+      605,
+      399
+     ]
+    }
+   ],
+   "trend": {
+    "improved": 898,
+    "stable": 872,
+    "declined": 230
+   },
+   "finding": "Average rating rose from 3.02 to 3.41; employees rated 4+ went from 34% to 50%. 230 employees declined. In 2024-H2 no one was rated 1 or 5, so part of the change may be calibration."
+  },
+  "q2": {
+   "rule": 2,
+   "top": [
+    {
+     "name": "Strategic Thinking",
+     "category": "Leadership",
+     "critical": 15,
+     "rate": 0.126
+    },
+    {
+     "name": "Stakeholder Management",
+     "category": "Domain",
+     "critical": 14,
+     "rate": 0.152
+    },
+    {
+     "name": "Risk Management",
+     "category": "Domain",
+     "critical": 12,
+     "rate": 0.128
+    },
+    {
+     "name": "Negotiation",
+     "category": "Domain",
+     "critical": 12,
+     "rate": 0.117
+    },
+    {
+     "name": "Incident Response",
+     "category": "Technical",
+     "critical": 12,
+     "rate": 0.114
+    },
+    {
+     "name": "Presentation Skills",
+     "category": "Domain",
+     "critical": 12,
+     "rate": 0.114
+    },
+    {
+     "name": "Agile Practices",
+     "category": "Domain",
+     "critical": 11,
+     "rate": 0.103
+    },
+    {
+     "name": "Communication",
+     "category": "Domain",
+     "critical": 10,
+     "rate": 0.11
+    },
+    {
+     "name": "Project Management",
+     "category": "Domain",
+     "critical": 10,
+     "rate": 0.102
+    },
+    {
+     "name": "People Leadership",
+     "category": "Leadership",
+     "critical": 10,
+     "rate": 0.093
+    }
+   ],
+   "heatmap": {
+    "rows": [
+     "Customer Support",
+     "Data & Analytics",
+     "Design",
+     "Engineering",
+     "Finance",
+     "Human Resources",
+     "Marketing",
+     "Operations",
+     "Product",
+     "Sales"
+    ],
+    "cols": [
+     "Domain",
+     "Leadership",
+     "Technical"
+    ],
+    "values": [
+     [
+      0.052,
+      0.043,
+      0.083
+     ],
+     [
+      0.093,
+      0.056,
+      0.083
+     ],
+     [
+      0.089,
+      0.104,
+      0.077
+     ],
+     [
+      0.046,
+      0.05,
+      0.106
+     ],
+     [
+      0.053,
+      0.1,
+      0.113
+     ],
+     [
+      0.116,
+      0.054,
+      0.091
+     ],
+     [
+      0.091,
+      0.031,
+      0.033
+     ],
+     [
+      0.063,
+      0.14,
+      0.048
+     ],
+     [
+      0.077,
+      0.068,
+      0.058
+     ],
+     [
+      0.101,
+      0.126,
+      0.102
+     ]
+    ]
+   },
+   "people": [
+    {
+     "full_name": "Amy Tucker",
+     "department": "Marketing",
+     "gaps": 2,
+     "competencies": "Market Analysis, Project Management"
+    },
+    {
+     "full_name": "Carrie Duncan",
+     "department": "Human Resources",
+     "gaps": 2,
+     "competencies": "Technical Writing, Test Automation"
+    },
+    {
+     "full_name": "Isabella Baker",
+     "department": "Sales",
+     "gaps": 2,
+     "competencies": "Incident Response, Onboarding & Enablement"
+    },
+    {
+     "full_name": "Jesus White",
+     "department": "Engineering",
+     "gaps": 2,
+     "competencies": "Customer Empathy, Public Speaking"
+    },
+    {
+     "full_name": "Kaylee Grimes",
+     "department": "Operations",
+     "gaps": 2,
+     "competencies": "Coaching & Mentoring, Risk Management"
+    },
+    {
+     "full_name": "Laurie Nunez",
+     "department": "Product",
+     "gaps": 2,
+     "competencies": "Communication, Risk Management"
+    },
+    {
+     "full_name": "Mark Lewis",
+     "department": "Finance",
+     "gaps": 2,
+     "competencies": "Market Analysis, Negotiation"
+    },
+    {
+     "full_name": "Paul Cole",
+     "department": "Sales",
+     "gaps": 2,
+     "competencies": "Conflict Resolution, Financial Acumen"
+    }
+   ],
+   "finding": "325 critical gaps across 317 employees (16%). Most affected: Strategic Thinking (15 people); highest rate: Leadership skills in Operations (14%)."
+  },
+  "q3": {
+   "rule": 4,
+   "stages": {
+    "Not in pipeline": 1354,
+    "Develop (high potential)": 480,
+    "Promote now": 132,
+    "Promote after closing skill gaps": 34
+   },
+   "by_department": [
+    {
+     "department": "Human Resources",
+     "now": 19,
+     "after": 6
+    },
+    {
+     "department": "Data & Analytics",
+     "now": 19,
+     "after": 4
+    },
+    {
+     "department": "Sales",
+     "now": 13,
+     "after": 8
+    },
+    {
+     "department": "Product",
+     "now": 18,
+     "after": 2
+    },
+    {
+     "department": "Customer Support",
+     "now": 14,
+     "after": 4
+    },
+    {
+     "department": "Engineering",
+     "now": 14,
+     "after": 2
+    },
+    {
+     "department": "Design",
+     "now": 9,
+     "after": 5
+    },
+    {
+     "department": "Operations",
+     "now": 12,
+     "after": 1
+    },
+    {
+     "department": "Marketing",
+     "now": 7,
+     "after": 2
+    },
+    {
+     "department": "Finance",
+     "now": 7,
+     "after": 0
+    }
+   ],
+   "shortlist": [
+    {
+     "full_name": "Yolanda Foley",
+     "department": "Marketing",
+     "job_level": "IC2",
+     "latest_rating": 5,
+     "critical_gap_count": 0,
+     "pipeline_stage": "Promote now"
+    },
+    {
+     "full_name": "Melissa Anderson",
+     "department": "Design",
+     "job_level": "IC2",
+     "latest_rating": 5,
+     "critical_gap_count": 0,
+     "pipeline_stage": "Promote now"
+    },
+    {
+     "full_name": "Sarah Rivera",
+     "department": "Sales",
+     "job_level": "Senior Manager",
+     "latest_rating": 5,
+     "critical_gap_count": 0,
+     "pipeline_stage": "Promote now"
+    },
+    {
+     "full_name": "Daniel Osborne",
+     "department": "Customer Support",
+     "job_level": "Manager",
+     "latest_rating": 5,
+     "critical_gap_count": 0,
+     "pipeline_stage": "Promote now"
+    },
+    {
+     "full_name": "Lisa Johnson",
+     "department": "Product",
+     "job_level": "Manager",
+     "latest_rating": 5,
+     "critical_gap_count": 0,
+     "pipeline_stage": "Promote now"
+    },
+    {
+     "full_name": "Barbara Lozano",
+     "department": "Product",
+     "job_level": "IC1",
+     "latest_rating": 5,
+     "critical_gap_count": 0,
+     "pipeline_stage": "Promote now"
+    },
+    {
+     "full_name": "Lindsey Gonzales",
+     "department": "Customer Support",
+     "job_level": "Senior Manager",
+     "latest_rating": 5,
+     "critical_gap_count": 0,
+     "pipeline_stage": "Promote now"
+    },
+    {
+     "full_name": "Michael Stein",
+     "department": "Operations",
+     "job_level": "Director",
+     "latest_rating": 5,
+     "critical_gap_count": 0,
+     "pipeline_stage": "Promote now"
+    }
+   ],
+   "finding": "166 candidates: 132 ready now, 34 after closing a skill gap. Potential and performance correlate at -0.01: 339 of 646 high-potential employees are rated below 4."
+  },
+  "q4": {
+   "completed": [
+    {
+     "label": "0",
+     "value": 339
+    },
+    {
+     "label": "1",
+     "value": 642
+    },
+    {
+     "label": "2",
+     "value": 525
+    },
+    {
+     "label": "3",
+     "value": 315
+    },
+    {
+     "label": "4",
+     "value": 125
+    },
+    {
+     "label": "5",
+     "value": 43
+    },
+    {
+     "label": "6",
+     "value": 8
+    },
+    {
+     "label": "7",
+     "value": 3
+    }
+   ],
+   "by_department": [
+    {
+     "label": "Product",
+     "value": 1.85
+    },
+    {
+     "label": "Finance",
+     "value": 1.85
+    },
+    {
+     "label": "Sales",
+     "value": 1.84
+    },
+    {
+     "label": "Data & Analytics",
+     "value": 1.81
+    },
+    {
+     "label": "Engineering",
+     "value": 1.77
+    },
+    {
+     "label": "Design",
+     "value": 1.72
+    },
+    {
+     "label": "Marketing",
+     "value": 1.65
+    },
+    {
+     "label": "Operations",
+     "value": 1.59
+    },
+    {
+     "label": "Human Resources",
+     "value": 1.58
+    },
+    {
+     "label": "Customer Support",
+     "value": 1.53
+    }
+   ],
+   "finding": "1.7 courses and 0.9 certifications per employee on average (quiz score 67). 317 employees (16%) had no learning activity in 180 days."
+  },
+  "q5": {
+   "rules": {
+    "points": {
+     "hr_high": 3,
+     "hr_medium": 1,
+     "rating_declined": 2,
+     "low_rating": 1,
+     "learning_inactive": 1
+    },
+    "high": 4,
+    "medium": 2
+   },
+   "tiers": {
+    "High": 251,
+    "Medium": 315,
+    "Low": 1434
+   },
+   "by_department": [
+    {
+     "department": "Sales",
+     "High": 0.158,
+     "Medium": 0.108,
+     "Low": 0.734
+    },
+    {
+     "department": "Marketing",
+     "High": 0.148,
+     "Medium": 0.115,
+     "Low": 0.738
+    },
+    {
+     "department": "Customer Support",
+     "High": 0.134,
+     "Medium": 0.153,
+     "Low": 0.713
+    },
+    {
+     "department": "Product",
+     "High": 0.133,
+     "Medium": 0.147,
+     "Low": 0.72
+    },
+    {
+     "department": "Data & Analytics",
+     "High": 0.131,
+     "Medium": 0.15,
+     "Low": 0.719
+    },
+    {
+     "department": "Finance",
+     "High": 0.118,
+     "Medium": 0.129,
+     "Low": 0.753
+    },
+    {
+     "department": "Operations",
+     "High": 0.118,
+     "Medium": 0.203,
+     "Low": 0.679
+    },
+    {
+     "department": "Design",
+     "High": 0.117,
+     "Medium": 0.149,
+     "Low": 0.734
+    },
+    {
+     "department": "Human Resources",
+     "High": 0.107,
+     "Medium": 0.187,
+     "Low": 0.706
+    },
+    {
+     "department": "Engineering",
+     "High": 0.088,
+     "Medium": 0.216,
+     "Low": 0.696
+    }
+   ],
+   "factors": [
+    {
+     "label": "HR flagged medium attrition risk",
+     "value": 612
+    },
+    {
+     "label": "Latest rating ≤ 2",
+     "value": 466
+    },
+    {
+     "label": "No learning in 180 days",
+     "value": 317
+    },
+    {
+     "label": "HR flagged high attrition risk",
+     "value": 311
+    },
+    {
+     "label": "Rating declined",
+     "value": 230
+    }
+   ],
+   "watchlist": [
+    {
+     "full_name": "Alexandra Lee",
+     "department": "Operations",
+     "potential_rating": "High",
+     "risk_score": 7,
+     "reasons": "HR flagged high attrition risk; Rating declined 3 -> 1; Low latest rating (1); No learning activity in 180 days"
+    },
+    {
+     "full_name": "Amy Tucker",
+     "department": "Marketing",
+     "potential_rating": "High",
+     "risk_score": 7,
+     "reasons": "HR flagged high attrition risk; Rating declined 2 -> 1; Low latest rating (1); No learning activity in 180 days"
+    },
+    {
+     "full_name": "Brian Brock",
+     "department": "Finance",
+     "potential_rating": "Medium",
+     "risk_score": 7,
+     "reasons": "HR flagged high attrition risk; Rating declined 2 -> 1; Low latest rating (1); No learning activity in 180 days"
+    },
+    {
+     "full_name": "Crystal Logan",
+     "department": "Marketing",
+     "potential_rating": "Medium",
+     "risk_score": 7,
+     "reasons": "HR flagged high attrition risk; Rating declined 3 -> 1; Low latest rating (1); No learning activity in 180 days"
+    },
+    {
+     "full_name": "David Mcclure",
+     "department": "Human Resources",
+     "potential_rating": "High",
+     "risk_score": 7,
+     "reasons": "HR flagged high attrition risk; Rating declined 2 -> 1; Low latest rating (1); No learning activity in 180 days"
+    },
+    {
+     "full_name": "Glenn Mathis",
+     "department": "Human Resources",
+     "potential_rating": "High",
+     "risk_score": 7,
+     "reasons": "HR flagged high attrition risk; Rating declined 2 -> 1; Low latest rating (1); No learning activity in 180 days"
+    },
+    {
+     "full_name": "Joseph Ford",
+     "department": "Design",
+     "potential_rating": "Low",
+     "risk_score": 7,
+     "reasons": "HR flagged high attrition risk; Rating declined 2 -> 1; Low latest rating (1); No learning activity in 180 days"
+    },
+    {
+     "full_name": "Nicole Smith",
+     "department": "Customer Support",
+     "potential_rating": "Medium",
+     "risk_score": 7,
+     "reasons": "HR flagged high attrition risk; Rating declined 3 -> 1; Low latest rating (1); No learning activity in 180 days"
+    }
+   ],
+   "finding": "251 employees (13%) are high risk and 315 medium. 86 high-risk employees are high-potential: talk to them first."
+  },
+  "q6": {
+   "points": [
+    {
+     "team": "Team DarkTurquoise-33",
+     "x": 3.36,
+     "y": 63.64,
+     "projects": 2
+    },
+    {
+     "team": "Team YellowGreen-48",
+     "x": 3.4,
+     "y": 66.66,
+     "projects": 2
+    },
+    {
+     "team": "Team Linen-93",
+     "x": 3.13,
+     "y": 51.88,
+     "projects": 2
+    },
+    {
+     "team": "Team HoneyDew-9",
+     "x": 3.63,
+     "y": 73.67,
+     "projects": 1
+    },
+    {
+     "team": "Team BurlyWood-43",
+     "x": 3.5,
+     "y": 73.89,
+     "projects": 1
+    },
+    {
+     "team": "Team DarkTurquoise-75",
+     "x": 3.25,
+     "y": 42.55,
+     "projects": 1
+    },
+    {
+     "team": "Team FloralWhite-27",
+     "x": 3.0,
+     "y": 43.76,
+     "projects": 1
+    },
+    {
+     "team": "Team Crimson-35",
+     "x": 3.24,
+     "y": 54.24,
+     "projects": 1
+    },
+    {
+     "team": "Team Azure-94",
+     "x": 3.77,
+     "y": 50.37,
+     "projects": 1
+    },
+    {
+     "team": "Team Turquoise-85",
+     "x": 3.15,
+     "y": 44.72,
+     "projects": 1
+    },
+    {
+     "team": "Team IndianRed-86",
+     "x": 3.0,
+     "y": 67.99,
+     "projects": 1
+    },
+    {
+     "team": "Team Black-8",
+     "x": 3.59,
+     "y": 70.33,
+     "projects": 1
+    },
+    {
+     "team": "Team Cornsilk-15",
+     "x": 3.39,
+     "y": 71.9,
+     "projects": 1
+    },
+    {
+     "team": "Team GreenYellow-34",
+     "x": 3.75,
+     "y": 84.68,
+     "projects": 1
+    },
+    {
+     "team": "Team SlateBlue-6",
+     "x": 3.4,
+     "y": 74.61,
+     "projects": 1
+    },
+    {
+     "team": "Team Red-37",
+     "x": 3.33,
+     "y": 54.96,
+     "projects": 2
+    },
+    {
+     "team": "Team Fuchsia-68",
+     "x": 3.21,
+     "y": 50.96,
+     "projects": 1
+    },
+    {
+     "team": "Team Crimson-80",
+     "x": 3.27,
+     "y": 49.54,
+     "projects": 2
+    },
+    {
+     "team": "Team Olive-38",
+     "x": 3.89,
+     "y": 68.32,
+     "projects": 2
+    },
+    {
+     "team": "Team GhostWhite-64",
+     "x": 3.88,
+     "y": 50.95,
+     "projects": 1
+    },
+    {
+     "team": "Team White-82",
+     "x": 2.7,
+     "y": 57.74,
+     "projects": 1
+    },
+    {
+     "team": "Team BlanchedAlmond-87",
+     "x": 3.38,
+     "y": 82.88,
+     "projects": 1
+    },
+    {
+     "team": "Team YellowGreen-89",
+     "x": 3.81,
+     "y": 94.76,
+     "projects": 1
+    },
+    {
+     "team": "Team Moccasin-13",
+     "x": 3.38,
+     "y": 85.79,
+     "projects": 1
+    },
+    {
+     "team": "Team LemonChiffon-39",
+     "x": 4.38,
+     "y": 56.87,
+     "projects": 1
+    },
+    {
+     "team": "Team Thistle-96",
+     "x": 3.76,
+     "y": 56.0,
+     "projects": 1
+    },
+    {
+     "team": "Team LightSalmon-97",
+     "x": 3.71,
+     "y": 50.91,
+     "projects": 1
+    }
+   ],
+   "r": 0.24,
+   "slope": 9.76,
+   "intercept": 29.05,
+   "teams_total": 100,
+   "finding": "A weak positive relationship (r = 0.24): about 10 outcome points per rating point. Only 27 of 100 teams have projects, so this is indicative."
+  },
+  "q7": {
+   "heatmap": {
+    "rows": [
+     "Domain",
+     "Leadership",
+     "Technical"
+    ],
+    "cols": [
+     "Level 1",
+     "Level 2",
+     "Level 3",
+     "Level 4",
+     "Level 5"
+    ],
+    "values": [
+     [
+      0.13,
+      0.205,
+      0.276,
+      0.264,
+      0.124
+     ],
+     [
+      0.118,
+      0.202,
+      0.29,
+      0.273,
+      0.118
+     ],
+     [
+      0.124,
+      0.209,
+      0.278,
+      0.254,
+      0.136
+     ]
+    ]
+   },
+   "weakest": [
+    {
+     "label": "Stakeholder Management",
+     "value": 2.62
+    },
+    {
+     "label": "Negotiation",
+     "value": 2.8
+    },
+    {
+     "label": "Risk Management",
+     "value": 2.87
+    },
+    {
+     "label": "DevOps Practices",
+     "value": 2.88
+    },
+    {
+     "label": "Market Analysis",
+     "value": 2.91
+    }
+   ],
+   "strongest": [
+    {
+     "label": "Regulatory Compliance",
+     "value": 3.31
+    },
+    {
+     "label": "Localization",
+     "value": 3.27
+    },
+    {
+     "label": "Cloud Architecture",
+     "value": 3.2
+    },
+    {
+     "label": "Pricing Strategy",
+     "value": 3.19
+    },
+    {
+     "label": "Data Privacy",
+     "value": 3.18
+    }
+   ],
+   "finding": "39% of assessments are at level 4-5 and 33% at level 1-2. Weakest: Stakeholder Management (2.62); strongest: Regulatory Compliance (3.31)."
+  }
+ }
+}
