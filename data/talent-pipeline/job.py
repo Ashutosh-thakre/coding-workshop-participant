@@ -35,7 +35,7 @@ import uuid
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
-from datetime import date, datetime, timezone
+from datetime import date, datetime, UTC
 from pathlib import Path
 from typing import Annotated, Any, Literal, ParamSpec, TypeVar, Union, get_args, get_origin
 from urllib.parse import urlencode
@@ -147,7 +147,7 @@ class PipelineConfig:
         return f"{self.lake_root}/lineage"
 
     @classmethod
-    def from_env(cls) -> "PipelineConfig":
+    def from_env(cls) -> PipelineConfig:
         """Build the configuration from environment variables.
 
         Required: POSTGRES_HOST, POSTGRES_NAME, POSTGRES_USER, POSTGRES_PASS and
@@ -178,7 +178,7 @@ class PipelineConfig:
 
         run_date_raw = os.environ.get("RUN_DATE", "").strip()
         try:
-            run_date = date.fromisoformat(run_date_raw) if run_date_raw else datetime.now(timezone.utc).date()
+            run_date = date.fromisoformat(run_date_raw) if run_date_raw else datetime.now(UTC).date()
         except ValueError as exc:
             raise ConfigError(f"RUN_DATE must be YYYY-MM-DD, got {run_date_raw!r}") from exc
 
@@ -189,7 +189,7 @@ class PipelineConfig:
             s3_endpoint=os.environ.get("AWS_ENDPOINT_URL", "").strip() or None,
             aws_region=os.environ.get("AWS_REGION", "us-east-1").strip() or "us-east-1",
             run_date=run_date,
-            run_id=datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:6],
+            run_id=datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:6],
             publish_gold_to_postgres=_parse_bool(os.environ.get("PUBLISH_GOLD_TO_POSTGRES", "true")),
         )
 
@@ -438,7 +438,7 @@ def read_text_lines(spark: SparkSession, directory: str, file_glob: str = "*.jso
 # =============================================================================
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(UTC).isoformat(timespec="seconds")
 
 
 @dataclass(frozen=True)
@@ -800,7 +800,7 @@ class LearningEvent(Contract):
     score: Annotated[int, Field(ge=0, le=100)] | None = None
 
     @model_validator(mode="after")
-    def score_only_on_quizzes(self) -> "LearningEvent":
+    def score_only_on_quizzes(self) -> LearningEvent:
         """Quiz events must have a score; other events must not."""
         if self.event_type in QUIZ_EVENTS and self.score is None:
             raise ValueError(f"score is required for {self.event_type} events")
@@ -982,7 +982,10 @@ def check_partition_dates(df: DataFrame, date_field: str, file_column: str = "_s
     matches = partition_day.isNull() | (partition_day == record_day)  # files without partitions are not checked
     mismatched = df.where(~matches).withColumn(
         DQ_ERRORS,
-        F.format_string("%s: %s does not match landing partition %s", F.lit(date_field), record_day.cast("string"), partition_day.cast("string")),
+        F.format_string(
+            "%s: %s does not match landing partition %s",
+            F.lit(date_field), record_day.cast("string"), partition_day.cast("string"),
+        ),
     )
     return df.where(matches), mismatched
 
@@ -1150,7 +1153,9 @@ def process_table(
     bronze = read_bronze_partition(spark, config, name).cache()
     rows_in = bronze.count()
     if rows_in == 0:
-        raise MissingBronzeError(f"Bronze partition {name}/{BRONZE_PARTITION}={config.run_date} is empty - run the bronze step first")
+        raise MissingBronzeError(
+            f"Bronze partition {name}/{BRONZE_PARTITION}={config.run_date} is empty - run the bronze step first"
+        )
     _report_schema_drift(bronze, contract, logger)
 
     # 1. Row-level contract
@@ -1372,7 +1377,9 @@ def build_employee_profile(
         .select("employee_id", F.col("review_period").alias("latest_period"), F.col("rating").alias("latest_rating"),
                 "previous_rating", "rating_change", "rating_trend")
     )
-    averages = history.groupBy("employee_id").agg(F.round(F.avg("rating"), 2).alias("avg_rating"), F.count("*").alias("review_count"))
+    averages = history.groupBy("employee_id").agg(
+        F.round(F.avg("rating"), 2).alias("avg_rating"), F.count("*").alias("review_count"),
+    )
     gaps = skill_gaps.groupBy("employee_id").agg(
         _count_if(F.col("is_critical_gap")).alias("critical_gap_count"), F.count("*").alias("competencies_assessed"),
     )
@@ -1544,7 +1551,9 @@ def run_gold(spark: SparkSession, config: PipelineConfig) -> list[DatasetMetric]
             GoldTable("employee_learning_summary", learning, ("employee_id",)),
             GoldTable("attrition_risk", build_attrition_risk(profile), ("employee_id",)),
             GoldTable("team_performance_outcomes", build_team_outcomes(profile, teams, silver("projects")), ("team_id",)),
-            GoldTable("skill_distribution", build_skill_distribution(gaps), ("department", "competency_name", "proficiency_level")),
+            GoldTable(
+                "skill_distribution", build_skill_distribution(gaps), ("department", "competency_name", "proficiency_level"),
+            ),
         ]
 
     with log_step(logger, "verify grain and reconcile with silver"):
@@ -1560,7 +1569,9 @@ def run_gold(spark: SparkSession, config: PipelineConfig) -> list[DatasetMetric]
         check_equal("skill_gaps", "rows", rows["skill_gaps"], n_assessments)
         for name in ("promotion_pipeline", "employee_learning_summary", "attrition_risk"):
             check_equal(name, "rows", rows[name], n_employees)
-        check_equal("employee_learning_summary", "sum(total_events)", total("employee_learning_summary", "total_events"), n_events)
+        check_equal(
+            "employee_learning_summary", "sum(total_events)", total("employee_learning_summary", "total_events"), n_events,
+        )
         check_equal("team_performance_outcomes", "rows", rows["team_performance_outcomes"], n_teams)
         check_equal("team_performance_outcomes", "sum(headcount)", total("team_performance_outcomes", "headcount"), n_employees)
         check_equal("skill_distribution", "sum(employees)", total("skill_distribution", "employees"), n_assessments)

@@ -1,0 +1,8 @@
+# Lint settings for the talent pipeline:  ruff check data/talent-pipeline
+line-length = 130
+target-version = "py311"
+
+[lint]
+select = ["E", "F", "W", "B", "UP", "SIM", "N"]
+# F / T aliases for pyspark.sql.functions / types are the standard PySpark convention
+ignore = ["N812"]
