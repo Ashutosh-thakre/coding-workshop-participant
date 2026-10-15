@@ -6,6 +6,8 @@ the Kubernetes job pod; the dataset is small enough that a cluster is not needed
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from pyspark.sql import SparkSession
 
 from pipeline.config import PipelineConfig
@@ -13,6 +15,9 @@ from pipeline.config import PipelineConfig
 # Connector versions must match the Spark build: Spark 4.1.2 ships Hadoop 3.4.2.
 POSTGRES_JDBC_PACKAGE = "org.postgresql:postgresql:42.7.7"
 HADOOP_AWS_PACKAGE = "org.apache.hadoop:hadoop-aws:3.4.2"
+
+# Folder containing the 'pipeline' package; Python workers (mapInPandas/UDFs) import from it.
+JOB_ROOT = str(Path(__file__).resolve().parent.parent)
 
 
 def build_spark(config: PipelineConfig, app_name: str = "talent-pipeline") -> SparkSession:
@@ -28,6 +33,8 @@ def build_spark(config: PipelineConfig, app_name: str = "talent-pipeline") -> Sp
         .config("spark.sql.shuffle.partitions", "8")
         # Progress bars flood batch logs; our own step logs report progress instead.
         .config("spark.ui.showConsoleProgress", "false")
+        # Python worker processes must be able to `import pipeline` too.
+        .config("spark.executorEnv.PYTHONPATH", JOB_ROOT)
         # S3A: credentials come from the default chain (env vars locally, IAM role in AWS).
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
         .config("spark.hadoop.fs.s3a.endpoint.region", config.aws_region)
