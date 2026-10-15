@@ -75,16 +75,21 @@ resource "null_resource" "helm_python_job" {
   }
 
   provisioner "local-exec" {
-    command = <<-EOT
+    # Job settings (local.data_job_env in datalake.tf, incl. the database password) are passed through
+    # environment variables so Terraform never prints them; Helm stores them in a Kubernetes Secret.
+    environment = { for k, v in local.data_job_env : "JOB_ENV_${k}" => v }
+    command     = <<-EOT
       helm upgrade --cleanup-on-fail \
         --install ${replace(each.key, "_", "-")}-python-job ./helm/ \
         --set pythonJob.enabled=true \
         --set pythonJob.name=${replace(each.key, "_", "-")} \
+        --set pythonJob.hostNetwork=true \
         --set-file pythonJob.scriptContent=${each.value.path}/${each.value.file} \
         --set-file pythonJob.requirementsContent=${each.value.path}/${each.value.reqs} \
+        ${join(" ", [for k in keys(local.data_job_env) : "--set-string pythonJob.env.${k}=\"$JOB_ENV_${k}\""])} \
         --namespace default
     EOT
   }
 
-  depends_on = [null_resource.helm_chart]
+  depends_on = [null_resource.helm_chart, aws_iam_role_policy.eks_datalake]
 }

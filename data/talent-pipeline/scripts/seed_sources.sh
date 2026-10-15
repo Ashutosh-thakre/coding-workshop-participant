@@ -5,17 +5,27 @@
 #            2. S3 bucket   <- learning activity events (JSONL files, under landing/)
 #          Safe to re-run: Postgres is skipped if already loaded, S3 uses `sync`.
 # Usage:   source data/talent-pipeline/env.local      # or cloud env vars
-#          ./data/talent-pipeline/scripts/seed_sources.sh [path/to/sample-data-dir]
+#          ./data/talent-pipeline/scripts/seed_sources.sh [--s3-only] [path/to/sample-data-dir]
+#
+#          --s3-only: upload only the landing files. Use it in AWS, where Aurora is private and is
+#                     seeded from inside the cluster by scripts/seed_cloud_postgres.sh instead.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd -P)"
 SAMPLE_ZIP="$PROJECT_ROOT/sampleData/data-engineering-sample-performance-scenario.zip"
+S3_ONLY=false
+if [ "${1:-}" = "--s3-only" ]; then
+    S3_ONLY=true
+    shift
+fi
 SAMPLE_DIR="${1:-$PROJECT_ROOT/sampleData/data-engineering-sample-performance-scenario/data-engineering-performance-talent-management}"
 
 # Fail fast with a clear message if a required variable is missing
-for var in POSTGRES_HOST POSTGRES_PORT POSTGRES_NAME POSTGRES_USER POSTGRES_PASS LAKE_BUCKET; do
+REQUIRED="LAKE_BUCKET"
+[ "$S3_ONLY" = true ] || REQUIRED="POSTGRES_HOST POSTGRES_PORT POSTGRES_NAME POSTGRES_USER POSTGRES_PASS $REQUIRED"
+for var in $REQUIRED; do
     if [ -z "${!var:-}" ]; then
         echo "ERROR: $var is not set. Did you run 'source data/talent-pipeline/env.local'?" >&2
         exit 1
@@ -35,9 +45,11 @@ SSLMODE=""
 if [ "${IS_LOCAL:-true}" != "true" ]; then
     SSLMODE="sslmode=require"   # AWS Aurora requires SSL, local Postgres does not
 fi
-CONN="host=$POSTGRES_HOST port=$POSTGRES_PORT dbname=$POSTGRES_NAME user=$POSTGRES_USER password=$POSTGRES_PASS $SSLMODE"
+CONN="host=${POSTGRES_HOST:-} port=${POSTGRES_PORT:-} dbname=${POSTGRES_NAME:-} user=${POSTGRES_USER:-} password=${POSTGRES_PASS:-} $SSLMODE"
 
-if [ "$(psql "$CONN" -tAc "SELECT to_regclass('public.employees') IS NOT NULL")" = "t" ]; then
+if [ "$S3_ONLY" = true ]; then
+    echo "INFO: --s3-only: skipping PostgreSQL."
+elif [ "$(psql "$CONN" -tAc "SELECT to_regclass('public.employees') IS NOT NULL")" = "t" ]; then
     echo "INFO: Postgres already seeded (table 'employees' exists) - skipping."
 else
     echo "INFO: Seeding Postgres from $SAMPLE_DIR ..."
@@ -62,6 +74,7 @@ aws s3 sync "$SAMPLE_DIR/learning_activity/" "s3://$LAKE_BUCKET/landing/learning
 echo ""
 echo "INFO: Verification"
 for table in teams competencies employees projects performance_reviews competency_assessments talent_review; do
+    [ "$S3_ONLY" = true ] && break
     csv_rows=$(( $(wc -l < "$SAMPLE_DIR/$table.csv") - 1 ))
     db_rows=$(psql "$CONN" -tAc "SELECT COUNT(*) FROM $table")
     status=$([ "$csv_rows" = "$db_rows" ] && echo "OK" || echo "MISMATCH")

@@ -19,7 +19,7 @@ resource "aws_rds_cluster" "this" {
   skip_final_snapshot             = true
   storage_encrypted               = true
   db_subnet_group_name            = element(aws_db_subnet_group.this.*.name, count.index)
-  vpc_security_group_ids          = data.aws_security_groups.this.ids
+  vpc_security_group_ids          = concat(data.aws_security_groups.this.ids, aws_eks_cluster.this[*].vpc_config[0].cluster_security_group_id) # + EKS cluster SG: worker nodes use it, so EKS pods reach Aurora
   enabled_cloudwatch_logs_exports = ["postgresql"]
 
   serverlessv2_scaling_configuration {

@@ -3,6 +3,8 @@ pythonJob:
   name: "python-job"
   scriptContent: ""
   requirementsContent: ""
+  env: {}   # environment variables for the job, stored in a Secret (set by infra/eks.tf)
+  hostNetwork: false   # true: use the node's network, e.g. to reach the node role's credentials (IMDS hop limit 1)
   backoffLimit: 4
   ttlSecondsAfterFinished: 100
   restartPolicy: Never

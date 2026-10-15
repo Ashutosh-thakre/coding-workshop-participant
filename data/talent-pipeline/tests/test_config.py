@@ -77,7 +77,7 @@ def test_cloud_mode_requires_ssl_and_local_does_not(env: pytest.MonkeyPatch) -> 
     env.setenv("IS_LOCAL", "false")
     url = job.PipelineConfig.from_env().postgres.jdbc_url
     assert url.startswith("jdbc:postgresql://db.example:5432/hr?")
-    assert "sslmode=require" in url and "connectTimeout=10" in url
+    assert "sslmode=require" in url and "connectTimeout=30" in url
 
 
 def test_password_never_printed(env: pytest.MonkeyPatch) -> None:

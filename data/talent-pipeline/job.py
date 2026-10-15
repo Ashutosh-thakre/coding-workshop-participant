@@ -95,9 +95,10 @@ class PostgresConfig:
     def jdbc_url(self) -> str:
         """JDBC URL used by Spark, with timeouts so a dead connection fails instead of hanging.
 
-        AWS Aurora requires SSL; local Postgres does not.
+        AWS Aurora requires SSL; local Postgres does not. connectTimeout allows for Aurora Serverless
+        resuming from auto-pause (min capacity 0), which takes ~15-30 s on the first connection.
         """
-        params = {"connectTimeout": 10, "socketTimeout": 600, "ApplicationName": "talent-pipeline"}
+        params = {"connectTimeout": 30, "socketTimeout": 600, "ApplicationName": "talent-pipeline"}
         if self.require_ssl:
             params["sslmode"] = "require"
         return f"jdbc:postgresql://{self.host}:{self.port}/{self.database}?{urlencode(params)}"
