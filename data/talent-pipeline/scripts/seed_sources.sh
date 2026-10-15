@@ -71,7 +71,13 @@ done
 local_files=$(find "$SAMPLE_DIR/learning_activity" -name "*.jsonl" | wc -l)
 s3_files=$(aws s3 ls "s3://$LAKE_BUCKET/landing/learning_activity/" --recursive | wc -l)
 status=$([ "$local_files" = "$s3_files" ] && echo "OK" || echo "MISMATCH")
-printf "  %-8s s3.landing/learning_activity     local=%-6s s3=%s\n" "$status" "$local_files" "$s3_files"
+printf "  %-8s s3.landing/learning_activity     files: local=%-8s s3=%s\n" "$status" "$local_files" "$s3_files"
+
+# File size check: total bytes of the source export must equal total bytes in S3
+local_bytes=$(find "$SAMPLE_DIR/learning_activity" -name "*.jsonl" -printf "%s\n" | awk '{s+=$1} END {print s+0}')
+s3_bytes=$(aws s3 ls "s3://$LAKE_BUCKET/landing/learning_activity/" --recursive --summarize | awk '/Total Size/ {print $3}')
+status=$([ "$local_bytes" = "$s3_bytes" ] && echo "OK" || echo "MISMATCH")
+printf "  %-8s s3.landing/learning_activity     bytes: local=%-8s s3=%s\n" "$status" "$local_bytes" "$s3_bytes"
 
 echo ""
 echo "INFO: Source systems ready."

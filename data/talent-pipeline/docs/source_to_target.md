@@ -2,9 +2,9 @@
 
 This document traces every dataset and column from the source systems through
 Bronze and Silver to Gold, and states exactly where columns are **renamed**,
-**cast**, **derived** or **aggregated**. Business rules referenced below are
-constants in [`pipeline/gold.py`](../pipeline/gold.py); contracts are in
-[`pipeline/schemas.py`](../pipeline/schemas.py).
+**cast**, **derived** or **aggregated**. Everything referenced below lives in
+[`job.py`](../job.py): contracts in section 10 (*Schema contracts*), Silver rules in
+section 12, and the business-rule constants at the top of section 13 (*Gold*).
 
 ## 1. Dataset lineage
 
@@ -87,7 +87,7 @@ columns are **cast** to `bigint` (contract type `int`). Strings are trimmed.
 | `performance_reviews` | `review_id` | `employee_id → employees` | **derived** `period_year` = substr(`review_period`, 1, 4); `period_half` = substr(`review_period`, 7, 1) |
 | `competency_assessments` | `assessment_id` | `employee_id → employees`, `competency_id → competencies` | levels 1–5 |
 | `talent_review` | `employee_id` | `employee_id → employees` | enum checks on ratings |
-| `learning_activity` | `event_id` | `employee_id → employees` | `raw_line` **parsed** from JSON; `notes` **renamed** → `text` (schema drift); `employee_id` **cast** string → bigint; `event_date` **cast** string → timestamp; `score` required only for quiz events; **derived** `event_day` = to_date(`event_date`), `event_year` = year(`event_date`) |
+| `learning_activity` | `event_id` | `employee_id → employees` | `raw_line` **parsed** from JSON; `notes` **renamed** → `text` (schema drift); `employee_id` **cast** string → bigint; `event_date` **cast** string → timestamp; `score` required only for quiz events; date of `event_date` must equal the landing folder's `year=/month=/day=` (else quarantined, stage `partition`); unknown JSON fields are reported as schema drift; **derived** `event_day` = to_date(`event_date`), `event_year` = year(`event_date`) |
 
 ## 5. Silver → Gold (per column)
 
@@ -193,7 +193,11 @@ columns are **cast** to `bigint` (contract type `int`). Strings are trimmed.
 | Bronze | source rows = rows read back from the written partition | `BronzeWriteError`, run fails |
 | Bronze | source returned > 0 rows | `EmptySourceError`, run fails |
 | Bronze | empty landing files | `WARNING` (no data lost) |
-| Silver | rows_in = rows_out + quarantined + duplicates | `ReconciliationError`, run fails |
-| Silver | schema drift detected | `WARNING`, field renamed |
-| Gold | grain keys unique and non-null for every table | `GoldCheckError`, run fails |
+| Bronze | landing file count and total bytes logged (compared with the source export by `scripts/seed_sources.sh`) | – |
+| Silver | rows_in = rows_out + quarantined + duplicates | `SilverCheckError`, run fails |
+| Silver | written table not empty, zero null primary keys, column types equal the contract | `SilverCheckError`, run fails |
+| Silver | known schema drift (`notes` → `text`) | `WARNING`, field renamed |
+| Silver | unknown field in source records | `WARNING`, field ignored (contract update needed) |
+| Silver | record date ≠ landing partition date | row quarantined (stage `partition`) |
+| Gold | table not empty; grain keys unique and non-null for every table | `GoldCheckError`, run fails |
 | Gold | history rows = Silver reviews; skill_gaps rows = Silver assessments; per-employee tables = Silver employees; team rows = Silver teams; Σ headcount = employees; Σ learning events = Silver events; Σ skill_distribution employees = assessments | `GoldCheckError`, run fails |
