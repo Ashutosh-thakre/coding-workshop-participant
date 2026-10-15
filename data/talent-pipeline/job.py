@@ -1377,15 +1377,23 @@ def build_skill_gaps(assessments: DataFrame, competencies: DataFrame, employee_d
     )
 
 
+def events_as_of(events: DataFrame, as_of: date) -> DataFrame:
+    """Learning events that had happened by the end of ``as_of`` (point-in-time view)."""
+    return events.where(F.col("event_day") <= F.lit(as_of))
+
+
 def build_learning_summary(events: DataFrame, employee_dim: DataFrame, as_of: date) -> DataFrame:
     """Q4: per-employee learning activity; every employee gets a row (zeros if no activity).
 
     completion_rate = courses completed / courses engaged with (any event). The event feed
     is not a strict funnel (completions without enrollment events exist), so
     'completed / enrolled' could exceed 100%.
+
+    Point-in-time: only events on or before ``as_of`` count, so a backfill for an earlier
+    run date reports what was known then (and days_since_last_activity is never negative).
     """
     event_type, course = F.col("event_type"), F.col("course_name")
-    per_employee = events.groupBy("employee_id").agg(
+    per_employee = events_as_of(events, as_of).groupBy("employee_id").agg(
         F.count("*").alias("total_events"),
         F.countDistinct(course).alias("courses_engaged"),
         F.countDistinct(F.when(event_type == "enrollment", course)).alias("courses_enrolled"),
@@ -1602,7 +1610,8 @@ def run_gold(spark: SparkSession, config: PipelineConfig) -> list[DatasetMetric]
 
     with log_step(logger, "verify grain and reconcile with silver"):
         n_employees, n_teams = employees.count(), teams.count()
-        n_reviews, n_assessments, n_events = reviews.count(), assessments.count(), events.count()
+        n_reviews, n_assessments = reviews.count(), assessments.count()
+        n_events = events_as_of(events, config.run_date).count()   # Gold counts events up to the run date
         rows = {t.name: check_grain(t.df, t.name, list(t.grain)) for t in tables}
         frames = {t.name: t.df for t in tables}
 

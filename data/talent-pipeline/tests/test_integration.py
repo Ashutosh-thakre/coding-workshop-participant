@@ -140,13 +140,31 @@ def test_run_bronze_ingests_postgres_and_landing(spark: SparkSession, lake) -> N
     assert metrics == {**{t: (n, n) for t, n in expected.items()}, "learning_activity": (2, 2)}
 
 
-def test_gold_publishing_to_postgres_from_run_gold(spark: SparkSession, lake) -> None:
-    """run_gold with publishing enabled writes gold_* tables (uses the real Silver from the lake)."""
+def test_gold_publishing_to_postgres_from_run_gold(spark: SparkSession, lake, monkeypatch: pytest.MonkeyPatch) -> None:
+    """run_gold with publishing enabled writes Postgres tables (uses the real Silver from the lake).
+
+    Publishing is redirected to temporary gold_pytest_* tables so the test never touches the
+    real gold_* tables that the notebook reads.
+    """
     real = make_config(f"s3a://{BUCKET}")
     config = make_config(lake, publish_gold_to_postgres=True)
     for name in ["employees", "teams", "performance_reviews", "competency_assessments", "competencies",
                  "talent_review", "projects", "learning_activity"]:
         spark.read.parquet(f"{real.silver_path}/{name}").write.mode("overwrite").parquet(f"{config.silver_path}/{name}")
-    metrics = {m.dataset: m.rows_out for m in job.run_gold(spark, config)}
-    with _pg_connect() as conn:
-        assert conn.execute("SELECT COUNT(*) FROM gold_attrition_risk").fetchone()[0] == metrics["attrition_risk"] == 2000
+
+    original, published = job.publish_to_postgres, []
+
+    def to_test_table(df, cfg, table: str) -> None:
+        published.append(f"pytest_{table}")
+        original(df, cfg, f"pytest_{table}")
+
+    monkeypatch.setattr(job, "publish_to_postgres", to_test_table)
+    try:
+        metrics = {m.dataset: m.rows_out for m in job.run_gold(spark, config)}
+        with _pg_connect() as conn:
+            assert conn.execute("SELECT COUNT(*) FROM gold_pytest_attrition_risk").fetchone()[0] == metrics["attrition_risk"] == 2000
+        assert len(published) == 7
+    finally:
+        with _pg_connect() as conn:
+            for table in published:
+                conn.execute(f"DROP TABLE IF EXISTS gold_{table}")  # noqa: S608

@@ -119,6 +119,8 @@ columns are **cast** to `bigint` (contract type `int`). Strings are trimmed.
 
 ### 5.3 `employee_learning_summary` — one row per employee (all employees, zeros if no activity)
 
+Only events with `event_day` ≤ run date are counted (point-in-time: a backfill reports what was known then).
+
 | Column | Source (`silver.learning_activity`) | Transformation |
 |--------|--------|----------------|
 | `total_events` | all events | **aggregated**: count |
@@ -200,4 +202,4 @@ columns are **cast** to `bigint` (contract type `int`). Strings are trimmed.
 | Silver | unknown field in source records | `WARNING`, field ignored (contract update needed) |
 | Silver | record date ≠ landing partition date | row quarantined (stage `partition`) |
 | Gold | table not empty; grain keys unique and non-null for every table | `GoldCheckError`, run fails |
-| Gold | history rows = Silver reviews; skill_gaps rows = Silver assessments; per-employee tables = Silver employees; team rows = Silver teams; Σ headcount = employees; Σ learning events = Silver events; Σ skill_distribution employees = assessments | `GoldCheckError`, run fails |
+| Gold | history rows = Silver reviews; skill_gaps rows = Silver assessments; per-employee tables = Silver employees; team rows = Silver teams; Σ headcount = employees; Σ learning events = Silver events up to the run date; Σ skill_distribution employees = assessments | `GoldCheckError`, run fails |

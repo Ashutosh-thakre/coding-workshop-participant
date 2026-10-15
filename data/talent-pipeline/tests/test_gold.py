@@ -203,3 +203,11 @@ def test_reconciliation_check_fails_on_mismatch() -> None:
     job.check_equal("t", "rows", 5, 5)
     with pytest.raises(job.GoldCheckError, match="rows = 4, expected 5"):
         job.check_equal("t", "rows", 4, 5)
+
+
+def test_learning_summary_is_point_in_time(spark: SparkSession, silver: dict[str, DataFrame]) -> None:
+    """Events after the as-of date are not counted (backfills report what was known then)."""
+    dim = job.build_employee_dim(silver["employees"], silver["teams"], date(2025, 12, 7))
+    ann = {r.employee_id: r for r in job.build_learning_summary(silver["learning_activity"], dim, date(2025, 12, 7)).collect()}[1]
+    assert ann.total_events == 3                      # Dec 1, 5, 6 - not Dec 10 / Dec 20
+    assert ann.last_activity_date == date(2025, 12, 6) and ann.days_since_last_activity == 1
