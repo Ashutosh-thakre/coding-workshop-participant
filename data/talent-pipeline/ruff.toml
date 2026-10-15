@@ -10,3 +10,5 @@ ignore = ["N812"]
 [lint.per-file-ignores]
 # Test fixtures are data tables and Spark schema strings: long lines read better than wrapped ones
 "tests/*" = ["E501"]
+# Notebook findings are long computed sentences
+"notebooks/*" = ["E501"]

@@ -562,6 +562,7 @@ class RunRecorder:
                 "postgres_database": cfg.postgres.database,
                 "publish_gold_to_postgres": cfg.publish_gold_to_postgres,
             },
+            "business_rules": business_rules(),
             "steps": [asdict(s) for s in self.steps],
             "datasets": [m.as_dict() for m in self.datasets],
         }
@@ -1308,6 +1309,20 @@ LEARNING_INACTIVE_DAYS = 180     # no learning activity for this many days -> at
 RISK_POINTS = {"hr_high": 3, "hr_medium": 1, "rating_declined": 2, "low_rating": 1, "learning_inactive": 1}
 RISK_TIER_HIGH = 4               # score >= 4 -> High
 RISK_TIER_MEDIUM = 2             # score >= 2 -> Medium, else Low
+
+
+def business_rules() -> dict[str, Any]:
+    """The rule values used by Gold, recorded in every run manifest so reports can quote them."""
+    return {
+        "critical_gap_levels": CRITICAL_GAP_LEVELS,
+        "high_performer_rating": HIGH_PERFORMER_RATING,
+        "promotion_min_rating": PROMOTION_MIN_RATING,
+        "low_rating": LOW_RATING,
+        "learning_inactive_days": LEARNING_INACTIVE_DAYS,
+        "risk_points": dict(RISK_POINTS),
+        "risk_tier_high": RISK_TIER_HIGH,
+        "risk_tier_medium": RISK_TIER_MEDIUM,
+    }
 
 
 class GoldCheckError(RuntimeError):

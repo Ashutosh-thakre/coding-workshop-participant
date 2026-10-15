@@ -58,6 +58,9 @@ omitted from the diagram for readability.
 | Gold | `gold/<table>/` + Postgres `gold_<table>` | Parquet / table | none | full refresh |
 | Lineage | `lineage/runs/run_date=/<run_id>.json`, `lineage/dataset_metrics/run_date=/` | JSON / Parquet | `run_date` | append (audit log) |
 
+Each run manifest also records the **business-rule values** used by Gold (`business_rules`), so reports
+(e.g. the notebook) quote the exact rules that produced the data they show.
+
 ## 3. Row-level lineage columns
 
 | Column | Added in | Meaning |

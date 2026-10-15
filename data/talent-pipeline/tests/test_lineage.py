@@ -49,6 +49,9 @@ def test_manifest_has_run_details_and_no_secrets(lake: Path) -> None:
     assert manifest["run_date"] == config.run_date.isoformat()
     assert manifest["datasets"][0]["rows_dropped"] == 1
     assert config.postgres.password not in json.dumps(manifest)
+    # the business rules that produced the data travel with it
+    assert manifest["business_rules"]["critical_gap_levels"] == job.CRITICAL_GAP_LEVELS
+    assert manifest["business_rules"]["risk_points"] == job.RISK_POINTS
 
 
 def test_write_run_lineage_writes_manifest_and_appends_metrics(spark: SparkSession, config: job.PipelineConfig) -> None:

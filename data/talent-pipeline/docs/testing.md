@@ -140,5 +140,8 @@ faster run. All of these are environment variables (`SPARK_DRIVER_MEMORY`, `SPAR
   `target_files` in Bronze.
 - Row validation runs Pydantic per row in Python (~290k rows/min at 10x on one core). Fine for daily
   HR data; for hundreds of millions of rows, translate the rules into native Spark expressions.
+- Spark occasionally prints `ERROR Inbox: Ignoring error` (or `RpcEndpointNotFoundException` from the
+  executor heartbeater) at start-up or shutdown. It is a benign race inside Spark's local mode, handled by
+  Spark itself ("Ignoring"); it appeared in 1 of 6 full runs on 2026-10-15 and never changed results or exit code.
 - Timestamps are stored and compared in UTC. Python's `collect()` shows them in the machine's local
   time zone. Tests build timestamps inside Spark so they pass in any time zone.
