@@ -1,0 +1,4 @@
+pyspark==4.1.2
+pydantic==2.14.1
+pandas==3.0.6
+pyarrow==26.0.0
