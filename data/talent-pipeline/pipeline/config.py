@@ -63,6 +63,7 @@ class PipelineConfig:
     aws_region: str
     run_date: date            # logical date of the batch; drives Bronze partitioning
     run_id: str               # unique id of this execution, stamped on every row and log line
+    publish_gold_to_postgres: bool = True  # also copy Gold tables to Postgres (gold_* tables)
 
     # --- Data lake zone paths (one place defines the layout) --------------------
     @property
@@ -102,7 +103,8 @@ class PipelineConfig:
         Required: POSTGRES_HOST, POSTGRES_NAME, POSTGRES_USER, POSTGRES_PASS and
         either LAKE_ROOT (any path/URI) or LAKE_BUCKET (an S3 bucket name).
         Optional: IS_LOCAL (default true), POSTGRES_PORT (5432), AWS_ENDPOINT_URL,
-        AWS_REGION (us-east-1), RUN_DATE (YYYY-MM-DD, default today in UTC).
+        AWS_REGION (us-east-1), RUN_DATE (YYYY-MM-DD, default today in UTC),
+        PUBLISH_GOLD_TO_POSTGRES (default true).
         """
         is_local = _parse_bool(os.environ.get("IS_LOCAL", "true"))
 
@@ -138,4 +140,5 @@ class PipelineConfig:
             aws_region=os.environ.get("AWS_REGION", "us-east-1").strip() or "us-east-1",
             run_date=run_date,
             run_id=datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:6],
+            publish_gold_to_postgres=_parse_bool(os.environ.get("PUBLISH_GOLD_TO_POSTGRES", "true")),
         )

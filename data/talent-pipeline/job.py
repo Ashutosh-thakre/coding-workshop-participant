@@ -20,18 +20,20 @@ from pyspark.sql import SparkSession
 
 from pipeline.bronze import run_bronze
 from pipeline.config import ConfigError, PipelineConfig
+from pipeline.gold import run_gold
 from pipeline.healthcheck import run_healthcheck
 from pipeline.lineage import DatasetMetric
 from pipeline.logging_utils import get_logger, log_step, setup_logging
 from pipeline.silver import run_silver
 from pipeline.spark_session import build_spark
 
-# Ordered registry of pipeline steps; a later phase adds gold.
+# Ordered registry of pipeline steps.
 # A step may return dataset metrics, which are collected for the run summary.
 STEPS: dict[str, Callable[[SparkSession, PipelineConfig], list[DatasetMetric] | None]] = {
     "check": run_healthcheck,
     "bronze": run_bronze,
     "silver": run_silver,
+    "gold": run_gold,
 }
 
 
