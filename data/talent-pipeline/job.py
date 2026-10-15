@@ -12,20 +12,37 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
 from collections.abc import Callable
 
 from pyspark.sql import SparkSession
 
+from pipeline.bronze import run_bronze
 from pipeline.config import ConfigError, PipelineConfig
 from pipeline.healthcheck import run_healthcheck
+from pipeline.lineage import DatasetMetric
 from pipeline.logging_utils import get_logger, log_step, setup_logging
 from pipeline.spark_session import build_spark
 
-# Ordered registry of pipeline steps; later phases add bronze, silver and gold.
-STEPS: dict[str, Callable[[SparkSession, PipelineConfig], None]] = {
+# Ordered registry of pipeline steps; later phases add silver and gold.
+# A step may return dataset metrics, which are collected for the run summary.
+STEPS: dict[str, Callable[[SparkSession, PipelineConfig], list[DatasetMetric] | None]] = {
     "check": run_healthcheck,
+    "bronze": run_bronze,
 }
+
+
+def log_summary(logger: logging.LoggerAdapter, metrics: list[DatasetMetric]) -> None:
+    """Log a reconciliation table: rows in / out / rejected / dropped per dataset."""
+    if not metrics:
+        return
+    logger.info("%-7s %-24s %8s %8s %9s %8s", "layer", "dataset", "rows_in", "rows_out", "rejected", "dropped")
+    for m in metrics:
+        logger.info(
+            "%-7s %-24s %8d %8d %9d %8d",
+            m.layer, m.dataset, m.rows_in, m.rows_out, m.rows_rejected, m.rows_dropped,
+        )
 
 
 def parse_steps(argv: list[str] | None = None) -> list[str]:
@@ -64,16 +81,19 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     spark = build_spark(config)
+    metrics: list[DatasetMetric] = []
     try:
         with log_step(logger, f"pipeline {steps}"):
             for step in steps:
-                STEPS[step](spark, config)
+                metrics += STEPS[step](spark, config) or []
     except Exception:  # already logged with traceback by log_step
+        log_summary(logger, metrics)
         logger.error("Pipeline FAILED")
         return 1
     finally:
         spark.stop()
 
+    log_summary(logger, metrics)
     logger.info("Pipeline SUCCEEDED")
     return 0
 
